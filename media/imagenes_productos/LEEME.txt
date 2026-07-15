@@ -1,0 +1,29 @@
+IMAGENES DEL CATALOGO DE PRODUCTOS - PRESENTACION VASO Y BOTELLA
+==================================================================
+
+Pegue en esta carpeta una fotografía por presentación y póngale como nombre
+el código que se digita en Up Base.
+
+Ejemplos de un mismo combo en dos presentaciones:
+  2611.jpg  -> Combo 1 dulce entregado con vaso
+  2768.jpg  -> Combo 1 dulce entregado con botella
+
+Otros ejemplos:
+  2085.jpg  -> Gaseosa vaso chico
+  2097.jpg  -> Gaseosa botella
+  003088.webp -> Combo cuyo código vaso es 3088
+  3089.webp -> Presentación botella del combo 3088
+
+Al recargar http://127.0.0.1:8000/productos/ puede usar:
+  - Presentación vaso
+  - Presentación botella
+  - Vista general
+
+La fotografía del código final también se mostrará en el reporte diario y en
+el detalle del cierre. Si el día tuvo ventas en vaso y en botella, aparecen en
+filas distintas con sus fotos correspondientes.
+
+Formatos admitidos: .jpg, .jpeg, .png y .webp
+Los ceros iniciales son aceptados: 003088 y 3088 se consideran el mismo código.
+
+No cambie el nombre de esta carpeta.

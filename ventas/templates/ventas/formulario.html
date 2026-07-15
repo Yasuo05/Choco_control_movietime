@@ -1,0 +1,26 @@
+{% extends 'ventas/base.html' %}
+{% block content %}
+<div class="page-head">
+    <div><p class="eyebrow">CONFIGURACIÓN</p><h1>{{ titulo }}</h1></div>
+    <a class="button outline" href="{{ volver }}">Volver</a>
+</div>
+<section class="panel form-panel">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="field {% if field.errors %}has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="error">{{ error }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+        {% for error in form.non_field_errors %}<p class="error">{{ error }}</p>{% endfor %}
+        <div class="actions">
+            <button class="button primary" type="submit">Guardar</button>
+            <a class="button outline" href="{{ volver }}">Cancelar</a>
+            {% if producto %}<a class="button danger-outline" href="{% url 'producto_eliminar' producto.pk %}">Eliminar producto</a>{% endif %}
+        </div>
+    </form>
+</section>
+{% endblock %}

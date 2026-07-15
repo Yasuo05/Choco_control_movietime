@@ -1,0 +1,97 @@
+{% extends 'ventas/base.html' %}
+{% block title %}Revisar boletas · Choco Control{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <p class="eyebrow">PASO 2 DE 3 · {{ fecha|date:'d/m/Y' }}</p>
+        <h1>Revisar y corregir la boleta</h1>
+        <p>Corrija directamente código y cantidad en la tabla. Se eliminó la tabla duplicada para que la revisión sea más clara y cómoda.</p>
+    </div>
+    <a class="button outline" href="{% url 'procesar_dia' %}?fecha={{ fecha|date:'Y-m-d' }}">Volver a cargar</a>
+</div>
+<form method="post">
+    {% csrf_token %}
+    <section class="review-grid">
+        {% for slot in slots %}
+        <article class="review-card {% if not slot.cierre %}empty-slot{% endif %}">
+            <header class="slot-head">
+                <span class="slot-number">{{ forloop.counter }}</span>
+                <div><h2>{{ slot.caja.nombre }}</h2>{% if slot.cierre %}<p>Cierre N.º {{ slot.cierre.numero }}</p>{% else %}<p>Sin imagen en este lote</p>{% endif %}</div>
+            </header>
+            {% if slot.cierre %}
+                {% if slot.cierre.imagen %}<img class="receipt mini" src="{{ slot.cierre.imagen.url }}" alt="Boleta de {{ slot.caja.nombre }}">{% endif %}
+                <p class="ocr-state">{{ slot.cierre.ocr_estado }}</p>
+                {% if slot.codigos_no_registrados %}
+                    <div class="alert danger-alert small-alert">{{ slot.codigos_no_registrados }} código(s) no están en el catálogo. Revise esas filas antes de guardar o cree el producto si corresponde.</div>
+                {% endif %}
+<div class="editable-review-head">
+                    <div>
+                        <h3>Corrección final antes de guardar</h3>
+                        <p>Edite directamente el código o la cantidad. Las filas marcadas como revisar quedan resaltadas.</p>
+                    </div>
+                    <button class="button outline small" type="button" data-add-row="{{ slot.cierre.pk }}">+ Agregar fila</button>
+                </div>
+
+                <div class="table-wrap editable-review-wrap">
+                    <table class="editable-review-table" data-review-table="{{ slot.cierre.pk }}">
+                        <thead>
+                            <tr>
+                                <th class="narrow">#</th>
+                                <th>Código final</th>
+                                <th>Producto / lectura</th>
+                                <th class="qty-column">Cantidad</th>
+                                <th>Estado</th>
+                                <th class="narrow">Quitar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for fila in slot.filas_editables %}
+                            <tr class="{% if fila.estado == 'Revisar' %}needs-review{% endif %}">
+                                <td class="row-index">{{ forloop.counter }}</td>
+                                <td>
+                                    <input class="table-input code-input" name="codigo_{{ slot.cierre.pk }}[]" value="{{ fila.codigo }}" inputmode="numeric" autocomplete="off">
+                                    {% if fila.no_registrado %}<span class="field-hint danger-text">No registrado</span>{% endif %}
+                                </td>
+                                <td>
+                                    <strong>{% if fila.producto_catalogo %}{{ fila.producto_catalogo }}{% else %}Producto por revisar{% endif %}</strong>
+                                    {% if fila.descripcion %}<small>{{ fila.descripcion }}</small>{% endif %}
+                                    {% if fila.alerta %}<small class="danger-text">{{ fila.alerta }}</small>{% endif %}
+                                </td>
+                                <td>
+                                    <input class="table-input qty-input" name="cantidad_{{ slot.cierre.pk }}[]" value="{{ fila.cantidad }}" inputmode="numeric" autocomplete="off">
+                                </td>
+                                <td>
+                                    {% if fila.estado == 'Revisar' %}
+                                        <span class="status-pill warning">Revisar</span>
+                                    {% else %}
+                                        <span class="status-pill ok">Detectado</span>
+                                    {% endif %}
+                                </td>
+                                <td><button class="icon-button" type="button" data-remove-row title="Quitar fila">×</button></td>
+                            </tr>
+                        {% empty %}
+                            <tr class="needs-review">
+                                <td class="row-index">1</td>
+                                <td><input class="table-input code-input" name="codigo_{{ slot.cierre.pk }}[]" inputmode="numeric" autocomplete="off"></td>
+                                <td><strong>Complete una fila</strong><small>No se detectaron productos editables.</small></td>
+                                <td><input class="table-input qty-input" name="cantidad_{{ slot.cierre.pk }}[]" inputmode="numeric" autocomplete="off"></td>
+                                <td><span class="status-pill warning">Revisar</span></td>
+                                <td><button class="icon-button" type="button" data-remove-row title="Quitar fila">×</button></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+{% for error in slot.errores %}<p class="error">{{ error }}</p>{% endfor %}
+                <p class="help">Si una fila aparece como <strong>Revisar</strong>, confirme el código y la cantidad contra la boleta antes de guardar. Puede agregar o quitar filas sin tocar formato de texto.</p>
+            {% else %}
+                <div class="omitted"><strong>Omitida</strong><p>No se adjuntó fotografía. No detiene el registro.</p></div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </section>
+    <div class="actions submit-bar">
+        <button class="button primary large" type="submit">Guardar válidas y ver consolidado</button>
+    </div>
+</form>
+{% endblock %}

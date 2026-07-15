@@ -1,0 +1,102 @@
+{% extends 'ventas/base.html' %}
+{% block title %}Ayuda de escritura · Up Base{% endblock %}
+{% block content %}
+<div class="page-head writing-page-head">
+    <div>
+        <p class="eyebrow">ASISTENTE DE DIGITACIÓN · {{ fecha|date:'d/m/Y' }}</p>
+        <h1>Ayuda de escritura para Up Base</h1>
+        <p>Coloque Up Base en la primera celda de código. El sistema escribirá código y cantidad con la secuencia configurada.</p>
+    </div>
+    <div class="page-actions">
+        <a class="button outline" href="{% url 'resumen_dia' fecha|date:'Y-m-d' %}">← Volver al reporte</a>
+    </div>
+</div>
+
+<section class="writing-hero-panel" data-upbase-writer data-start-url="{% url 'iniciar_escritura_upbase' fecha|date:'Y-m-d' %}">
+    <div class="writer-summary">
+        <article><span>Códigos</span><strong>{{ total_codigos }}</strong></article>
+        <article><span>Cantidad total</span><strong>{{ total_cantidad }}</strong></article>
+        <article><span>Secuencia</span><strong>Código → Enter → ↑ → → → → Cantidad → Enter</strong></article>
+    </div>
+
+    {% if not pyautogui_disponible %}
+        <div class="alert danger-alert"><strong>Falta instalar la ayuda de escritura.</strong> Ejecute <code>INSTALAR_AYUDA_ESCRITURA.bat</code> y vuelva a abrir la aplicación.</div>
+    {% endif %}
+
+    <div class="writer-instructions-grid">
+        <div class="writer-countdown-card">
+            <h2>Inicio automático</h2>
+            <p>Presione el botón, cambie a Up Base y haga clic en la primera celda de <strong>Código</strong>.</p>
+            <form data-upbase-writer-form>
+                {% csrf_token %}
+                <div class="writer-options">
+                    <label>Tiempo para ubicar cursor
+                        <select name="espera">
+                            <option value="5">5 segundos</option>
+                            <option value="7" selected>7 segundos</option>
+                            <option value="10">10 segundos</option>
+                            <option value="15">15 segundos</option>
+                        </select>
+                    </label>
+                    <label>Velocidad entre filas
+                        <select name="pausa">
+                            <option value="0.03">Turbo</option>
+                            <option value="0.08" selected>Rápida</option>
+                            <option value="0.15">Normal</option>
+                            <option value="0.35">Segura</option>
+                        </select>
+                    </label>
+                </div>
+                <button class="button primary writer-start-button" type="submit" {% if not consolidado or not pyautogui_disponible %}disabled{% endif %}>Iniciar ayuda de escritura</button>
+            </form>
+            <div class="writer-live-status" hidden data-writer-status>
+                <span class="writer-count" data-writer-count>7</span>
+                <div>
+                    <strong data-writer-title>Prepare Up Base</strong>
+                    <p data-writer-message>Coloque el cursor en la primera celda de código. No toque el teclado hasta que termine.</p>
+                </div>
+            </div>
+            <div class="writer-stop-note"><strong>Detención de emergencia:</strong> mueva el mouse a una esquina de la pantalla para activar el seguro de PyAutoGUI.</div>
+            <div class="alert" hidden data-writer-error></div>
+        </div>
+        <div class="writer-steps-card">
+            <h2>Qué hará por cada fila</h2>
+            <ol>
+                <li>Escribe el código.</li>
+                <li>Presiona <kbd>Enter</kbd> para validar el producto.</li>
+                <li>Sube una fila y avanza dos columnas hacia cantidad.</li>
+                <li>Escribe la cantidad.</li>
+                <li>Presiona <kbd>Enter</kbd> y continúa con el siguiente código.</li>
+            </ol>
+            <p class="muted-note">La escritura usa pegado rápido por portapapeles. Si Up Base no alcanza a validar, cambie de Turbo/Rápida a Normal o Segura.</p>
+        </div>
+    </div>
+</section>
+
+<section class="panel writer-list-panel">
+    <div class="panel-header stack">
+        <div>
+            <p class="eyebrow">ORDEN DE ESCRITURA</p>
+            <h2>Productos que se cargarán</h2>
+            <p>El asistente seguirá este mismo orden del consolidado.</p>
+        </div>
+    </div>
+    {% if consolidado %}
+    <div class="writer-product-list">
+        {% for fila in consolidado %}
+        <article class="writer-product-item">
+            {% if fila.imagen_catalogo_url %}<img src="{{ fila.imagen_catalogo_url }}" alt="Imagen de {{ fila.producto }}">{% else %}<span class="writer-product-empty">+</span>{% endif %}
+            <div class="writer-product-main">
+                <strong>{{ forloop.counter }}. {{ fila.producto }}</strong>
+                <span>{{ fila.presentacion }} · {{ fila.cajas }}</span>
+            </div>
+            <div class="writer-product-code"><span>Código</span><strong>{{ fila.codigo_final }}</strong></div>
+            <div class="writer-product-qty"><span>Cant.</span><strong>{{ fila.cantidad }}</strong></div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">No hay productos consolidados para escribir.</div>
+    {% endif %}
+</section>
+{% endblock %}

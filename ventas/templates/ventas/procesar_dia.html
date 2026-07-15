@@ -1,0 +1,62 @@
+{% extends 'ventas/base.html' %}
+{% block title %}Cargar fotos del día · Choco Control{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <p class="eyebrow">PASO 1 DE 3</p>
+        <h1>Cargar boletas por vía de venta</h1>
+        <p>Use solo las casillas que correspondan. Tras enviar las fotos verá una pantalla de análisis con cada boleta antes de revisar sus cantidades.</p>
+    </div>
+    <a class="button outline" href="{% url 'dashboard' %}">Volver</a>
+</div>
+{% for error in errores %}<div class="alert danger-alert">{{ error }}</div>{% endfor %}
+<form method="post" enctype="multipart/form-data" novalidate data-upload-form>
+    {% csrf_token %}
+    <section class="panel date-panel">
+        <div class="date-field">
+            <label for="fecha">Fecha del cierre</label>
+            <input id="fecha" type="date" name="fecha" value="{{ fecha|date:'Y-m-d' }}" required>
+        </div>
+        <p class="help">Si luego carga otra boleta del mismo día y vía, se tratará como acumulada: el sistema resta la boleta anterior y solo agrega la diferencia nueva.</p>
+    </section>
+    <div class="alert info-calculation"><strong>Regla de acumulados:</strong> Presencial, Kio 1, Kio 2 y Ventas online se calculan por separado. Si una vía tiene dos boletas en el día, la segunda no se suma completa: se resta la anterior.</div>
+    <section class="upload-grid">
+        {% for caja in cajas %}
+        <article class="upload-card">
+            <div class="slot-head">
+                <span class="slot-number">{{ forloop.counter }}</span>
+                <div><h2>{{ caja.nombre }}</h2><p>{{ caja.get_tipo_display }}</p></div>
+            </div>
+            <label class="file-drop" for="imagen_{{ caja.pk }}">
+                <span>Suelte aquí la boleta, pegue con Ctrl+V o haga clic</span>
+                <small>Opcional · JPG, PNG o WEBP · puede arrastrar desde WhatsApp si el navegador entrega archivo; si no, copie la imagen y péguela con Ctrl+V</small>
+                <input id="imagen_{{ caja.pk }}" type="file" name="imagen_{{ caja.pk }}" accept="image/*" data-file-input data-caja="{{ caja.nombre }}">
+                <em data-file-label>Ninguna imagen seleccionada</em>
+                <small class="drop-help" data-drop-help>También puede abrir la foto de WhatsApp, copiar la imagen y pegarla aquí sin descargar.</small>
+            </label>
+            <div class="upload-preview" data-file-preview hidden>
+                <img alt="Vista previa de la boleta seleccionada">
+                <div>
+                    <strong>Lista para analizar</strong>
+                    <small data-preview-name></small>
+                </div>
+            </div>
+            <div class="compact-field">
+                <label for="modalidad_{{ caja.pk }}">Entrega de este periodo</label>
+                <select id="modalidad_{{ caja.pk }}" name="modalidad_{{ caja.pk }}">
+                    {% for valor, texto in modalidades %}<option value="{{ valor }}">{{ texto }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="compact-field">
+                <label for="motivo_{{ caja.pk }}">Motivo del cambio a botella</label>
+                <input id="motivo_{{ caja.pk }}" name="motivo_{{ caja.pk }}" placeholder="Opcional: agotamiento de jarabe">
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+    <div class="actions submit-bar">
+        <button class="button primary large" type="submit">Continuar al análisis de imágenes</button>
+        <span class="muted">Las casillas vacías se omiten automáticamente.</span>
+    </div>
+</form>
+{% endblock %}

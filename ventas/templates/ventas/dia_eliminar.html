@@ -1,0 +1,56 @@
+{% extends 'ventas/base.html' %}
+{% block title %}Eliminar registros del día · Choco Control{% endblock %}
+{% block content %}
+<div class="page-head delete-day-head">
+    <div>
+        <p class="eyebrow">LIMPIEZA DE REGISTROS</p>
+        <h1>Eliminar registros del día</h1>
+        <p>Revise la fecha y confirme únicamente si desea retirar todos sus cierres del consolidado.</p>
+    </div>
+    <a class="button outline" href="{% url 'resumen_dia' fecha|date:'Y-m-d' %}">Volver al reporte</a>
+</div>
+
+<section class="panel delete-day-panel">
+    <div class="delete-day-date">
+        <div>
+            <span class="field-label">Fecha a eliminar</span>
+            <strong>{{ fecha|date:'d/m/Y' }}</strong>
+            {% if es_hoy %}<span class="today-tag">Hoy</span>{% endif %}
+        </div>
+        <div class="delete-day-metrics">
+            <article><strong>{{ metodos|length }}</strong><span>Vías</span></article>
+            <article><strong>{{ total_cierres }}</strong><span>Cierres</span></article>
+            <article><strong>{{ total_detalles }}</strong><span>Filas de productos</span></article>
+        </div>
+    </div>
+
+    {% if tiene_registros %}
+    <div class="delete-warning blocking delete-day-warning">
+        <strong>Esta acción no se puede deshacer.</strong>
+        <p>Se borrarán los cierres, cantidades revisadas y fotografías de boletas registradas para esta fecha. El catálogo de productos, sus equivalencias y las imágenes del catálogo se conservarán.</p>
+    </div>
+
+    <div class="table-wrap delete-day-table">
+        <table>
+            <thead><tr><th>Vía de venta incluida</th><th>Boletas a eliminar</th></tr></thead>
+            <tbody>
+            {% for metodo in metodos %}
+                <tr><td><strong>{{ metodo.nombre }}</strong></td><td>{{ metodo.cierres }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <form method="post" class="actions delete-day-actions">
+        {% csrf_token %}
+        <a class="button outline" href="{% url 'resumen_dia' fecha|date:'Y-m-d' %}">Cancelar</a>
+        <button class="button danger" type="submit">Sí, eliminar todos los registros del día</button>
+    </form>
+    {% else %}
+    <div class="empty delete-day-empty">No hay registros guardados para esta fecha.</div>
+    <div class="actions delete-day-actions">
+        <a class="button primary" href="{% url 'procesar_dia' %}?fecha={{ fecha|date:'Y-m-d' }}">Cargar boletas</a>
+        <a class="button outline" href="{% url 'dashboard' %}">Volver a inicio</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

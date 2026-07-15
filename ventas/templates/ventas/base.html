@@ -1,0 +1,38 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Choco · Control Up Base{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'ventas/icons/choco_icon.ico' %}?v=22">
+    <link rel="shortcut icon" href="{% static 'ventas/icons/choco_icon.ico' %}?v=22">
+    <link rel="apple-touch-icon" href="{% static 'ventas/icons/choco_icon_180.png' %}?v=22">
+    <link rel="stylesheet" href="{% static 'ventas/styles.css' %}?v=28">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">
+        <a href="{% url 'dashboard' %}"><span class="brand-mark">C</span> Movie time -  Chincha</a>
+        <small>Chocolateria Movie Time</small>
+    </div>
+    <nav>
+        <a href="{% url 'dashboard' %}">Inicio</a>
+        <a href="{% url 'productos_lista' %}">Productos</a>
+        <a href="{% url 'cajas_lista' %}">Vías de venta</a>
+        <a class="button primary small" href="{% url 'procesar_dia' %}">+ Cargar fotos del día</a>
+    </nav>
+</header>
+<main class="container">
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}
+        </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+<footer class="footer">Revise las cantidades detectadas antes de exportar el reporte final para Up Base.</footer>
+<script src="{% static 'ventas/app.js' %}?v=28"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

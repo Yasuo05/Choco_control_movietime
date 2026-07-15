@@ -1,0 +1,56 @@
+{% extends 'ventas/base.html' %}
+{% block title %}Inicio · Choco Control{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Movie Time - Chocolateria</p>
+        <h1>Carga boletas por cada vía de venta</h1>
+        <p>Adjunte las boletas de Presencial, Kio 1, Kio 2 o Ventas online. Si vuelve a cargar la misma vía durante el día, se restará su cierre anterior porque la boleta es acumulada.</p>
+    </div>
+    <a class="button primary large" href="{% url 'procesar_dia' %}">Cargar fotos de hoy</a>
+</section>
+<section class="metrics">
+    <article><strong>{{ total_cajas }}</strong><span>Vías de venta</span></article>
+    <article><strong>{{ total_productos }}</strong><span>Productos activos</span></article>
+    <article class="{% if pendientes_confirmar %}warning-card{% endif %}"><strong>{{ pendientes_confirmar }}</strong><span>Equivalencias pendientes</span></article>
+</section>
+
+<section class="panel days-panel">
+    <div class="panel-header">
+        <div>
+            <h2>Cierres por fecha</h2>
+            <p class="panel-subtitle">Abra un día para consultar las vías registradas y su consolidado; los cierres repetidos de una vía se restan entre sí.</p>
+        </div>
+        <a class="button outline small" href="{% url 'jornada_nueva' %}">Registro manual avanzado</a>
+    </div>
+    <div class="table-wrap">
+        <table class="days-table">
+            <thead><tr><th>Fecha del día</th><th>Vías cerradas</th><th>Cierres registrados</th><th>Acción</th></tr></thead>
+            <tbody>
+            {% for dia in dias %}
+                <tr class="{% if dia.es_hoy %}today-row{% endif %}">
+                    <td>
+                        <div class="day-label">
+                            <strong>{{ dia.fecha|date:'d/m/Y' }}</strong>
+                            {% if dia.es_hoy %}<span class="today-tag">Hoy</span>{% endif %}
+                        </div>
+                    </td>
+                    <td><strong>{{ dia.num_metodos }}</strong></td>
+                    <td>{{ dia.num_cierres }}</td>
+                    <td class="nowrap">
+                        <div class="row-actions">
+                            <a class="button small {% if dia.es_hoy %}primary{% else %}outline{% endif %}" href="{% url 'resumen_dia' dia.fecha|date:'Y-m-d' %}">Abrir día</a>
+                            {% if dia.num_cierres %}
+                            <a class="button small danger-outline" href="{% url 'eliminar_registros_dia' dia.fecha|date:'Y-m-d' %}">Eliminar registros</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4" class="empty">Aún no se han cargado boletas.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

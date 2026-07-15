@@ -1,0 +1,59 @@
+{% extends 'ventas/base.html' %}
+{% block title %}Analizando boletas · Choco Control{% endblock %}
+{% block content %}
+<section class="analysis-page" data-server-analysis-page data-execute-url="{% url 'ejecutar_analisis_lote' %}">
+    <div class="analysis-page-head">
+        <p class="eyebrow">PASO 2 DE 3 · {{ fecha|date:'d/m/Y' }}</p>
+        <h1>Analizando boletas cargadas</h1>
+        <p data-analysis-message>Las imágenes ya fueron recibidas. El sistema está preparando la lectura de productos y cantidades.</p>
+    </div>
+    <form class="analysis-token" data-analysis-trigger method="post" action="{% url 'ejecutar_analisis_lote' %}">{% csrf_token %}</form>
+    <div class="analysis-workspace">
+        <section class="analysis-focus-card" role="status" aria-live="polite">
+            <div class="analysis-live-head">
+                <span class="analysis-spinner" aria-hidden="true"></span>
+                <div>
+                    <p class="eyebrow">PROCESO EN CURSO</p>
+                    <h2 data-analysis-title>Preparando imágenes</h2>
+                </div>
+            </div>
+            <div class="analysis-progress-track" aria-hidden="true"><span data-analysis-progress></span></div>
+            <div class="server-carousel">
+                <button type="button" class="carousel-nav previous" data-analysis-prev aria-label="Imagen anterior">‹</button>
+                <div class="server-slides">
+                    {% for slot in slots %}
+                    <article class="analysis-slide {% if forloop.first %}active{% endif %}" data-analysis-slide>
+                        <img src="{{ slot.imagen_url }}" alt="Boleta seleccionada para {{ slot.caja_nombre }}">
+                        <div class="analysis-slide-info">
+                            <strong>{{ slot.caja_nombre }}</strong>
+                            <span>{{ slot.archivo }}</span>
+                            <small>Imagen {{ forloop.counter }} de {{ cantidad_imagenes }}</small>
+                            <p>{% if slot.modalidad == 'BOTELLA' %}Entrega con botella{% else %}Venta normal con vaso{% endif %}</p>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                <button type="button" class="carousel-nav next" data-analysis-next aria-label="Imagen siguiente">›</button>
+            </div>
+            <div class="analysis-dots" data-analysis-dots aria-label="Fotografías en análisis">
+                {% for slot in slots %}<button type="button" class="analysis-dot {% if forloop.first %}active{% endif %}" data-analysis-dot="{{ forloop.counter0 }}" aria-label="Ver {{ slot.caja_nombre }}"></button>{% endfor %}
+            </div>
+            <p class="analysis-footnote">No cierre esta página. Al finalizar se abrirá automáticamente la revisión de códigos y cantidades.</p>
+            <div class="analysis-error" data-analysis-error hidden>
+                <p>No fue posible terminar la lectura. Puede intentarlo nuevamente sin volver a cargar las fotos.</p>
+                <button class="button primary" type="button" data-analysis-retry>Reintentar análisis</button>
+            </div>
+        </section>
+        <aside class="analysis-queue">
+            <h2>Boletas recibidas</h2>
+            <p>{{ cantidad_imagenes }} imagen{{ cantidad_imagenes|pluralize:'es' }} en este análisis</p>
+            {% for slot in slots %}
+            <article>
+                <img src="{{ slot.imagen_url }}" alt="Miniatura de {{ slot.caja_nombre }}">
+                <div><strong>{{ slot.caja_nombre }}</strong><span>{% if slot.modalidad == 'BOTELLA' %}Botella{% else %}Vaso{% endif %}</span></div>
+            </article>
+            {% endfor %}
+        </aside>
+    </div>
+</section>
+{% endblock %}

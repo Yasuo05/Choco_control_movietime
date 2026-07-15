@@ -1,0 +1,50 @@
+{% extends 'ventas/base.html' %}
+{% block title %}Eliminar producto · Choco Control{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <p class="eyebrow">CATÁLOGO</p>
+        <h1>Eliminar producto</h1>
+        <p>Esta acción retira la tarjeta del catálogo y sus reglas de conversión.</p>
+    </div>
+    <a class="button outline" href="{% url 'productos_lista' %}?vista=general">Volver al catálogo</a>
+</div>
+<section class="panel form-panel delete-confirm-panel">
+    <div class="delete-product-summary">
+        <p class="eyebrow">PRODUCTO SELECCIONADO</p>
+        <h2>{{ producto.nombre }}</h2>
+        <div class="delete-code-grid">
+            <div><span>Venta / vaso</span><strong class="code">{{ producto.codigo_vaso|default:'—' }}</strong></div>
+            <div><span>Botella</span><strong class="code">{{ producto.codigo_botella|default:'—' }}</strong></div>
+        </div>
+    </div>
+
+    {% if bloqueado %}
+    <div class="delete-warning blocking">
+        <strong>No puede eliminarse.</strong>
+        <p>Este producto ya interviene en cierres registrados. Para proteger los reportes anteriores, debe conservarse en el catálogo.</p>
+    </div>
+    <div class="actions">
+        <a class="button primary" href="{% url 'productos_lista' %}?vista=general">Regresar</a>
+        <a class="button outline" href="{% url 'producto_editar' producto.pk %}">Editar producto</a>
+    </div>
+    {% else %}
+    <div class="delete-warning">
+        {% if respaldo_botella %}
+        <strong>La relación principal se conservará.</strong>
+        <p>Esta fila de botella está duplicada por un producto convertible; al eliminarla quedará una sola relación vaso → botella.</p>
+        {% else %}
+        <strong>Confirme la eliminación.</strong>
+        <p>El producto dejará de aparecer en el catálogo. La fotografía guardada en la carpeta de imágenes no se borra automáticamente.</p>
+        {% endif %}
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="actions">
+            <button class="button danger" type="submit">Sí, eliminar producto</button>
+            <a class="button outline" href="{% url 'productos_lista' %}?vista=general">Cancelar</a>
+        </div>
+    </form>
+    {% endif %}
+</section>
+{% endblock %}

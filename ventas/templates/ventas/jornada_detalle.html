@@ -1,0 +1,89 @@
+{% extends 'ventas/base.html' %}
+{% block title %}{{ jornada.caja.nombre }} · {{ jornada.fecha|date:'d/m/Y' }}{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <p class="eyebrow">VÍA DE VENTA</p>
+        <h1>{{ jornada.caja.nombre }} <span class="muted">· {{ jornada.fecha|date:'d/m/Y' }}</span></h1>
+        {% if jornada.observaciones %}<p>{{ jornada.observaciones }}</p>{% endif %}
+    </div>
+    <div class="actions"><a class="button outline" href="{% url 'resumen_dia' jornada.fecha|date:'Y-m-d' %}">Consolidado diario</a><a class="button primary" href="{% url 'cierre_nuevo' jornada.pk %}">+ Registrar cierre</a></div>
+</div>
+{% if advertencias %}
+<section class="alerts">{% for advertencia in advertencias %}<div class="alert">{{ advertencia }}</div>{% endfor %}</section>
+{% endif %}
+<div class="alert info-calculation"><strong>Esta vía no se suma contra sí misma:</strong> cuando existe más de una boleta, la siguiente es acumulada. Solo la diferencia nueva ingresa al reporte final.</div>
+<div class="layout-jornada">
+<div>
+<section class="panel">
+    <div class="panel-header"><h2>Boletas acumuladas de esta vía</h2></div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Cierre</th><th>Modalidad del periodo</th><th>Motivo</th><th>Códigos registrados</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+            {% for cierre in cierres %}
+                <tr>
+                    <td><strong>N.º {{ cierre.numero }}</strong></td>
+                    <td>{% if cierre.modalidad_periodo == 'BOTELLA' %}<span class="status convert">Botella</span>{% else %}<span class="status vessel">Vaso</span>{% endif %}</td>
+                    <td>{{ cierre.motivo_cambio|default:'—' }}</td>
+                    <td>{{ cierre.detalles.count }}</td>
+                    <td>{% if cierre.confirmado %}<span class="status ok">Validado</span>{% else %}<span class="status pending">Pendiente</span>{% endif %}</td>
+                    <td class="nowrap"><a href="{% url 'cierre_revisar' cierre.pk %}">Cantidades</a> · <a href="{% url 'cierre_editar' cierre.pk %}">Editar</a></td>
+                </tr>
+            {% empty %}<tr><td colspan="6" class="empty">Aún no hay cierres. Registre el primer acumulado de la vía.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+<section class="panel">
+    <div class="panel-header"><div><h2>Cálculo por periodo</h2><p class="panel-subtitle">Venta nueva = acumulado de esta boleta − acumulado anterior de la misma vía.</p></div><span class="muted">Código final según presentación entregada</span></div>
+    <div class="table-wrap">
+        <table class="movement-table">
+            <thead><tr><th>Boleta</th><th>Código leído</th><th>Acumulado anterior</th><th>Acumulado boleta</th><th>Venta nueva</th><th>Entrega</th><th>Resultado Up Base</th><th>Acción</th></tr></thead>
+            <tbody>
+            {% for mov in movimientos %}
+                <tr class="{% if mov.advertencia %}row-error{% endif %}">
+                    <td>{{ mov.cierre_numero }}</td>
+                    <td class="code">{{ mov.codigo_leido }}</td>
+                    <td>{{ mov.cantidad_anterior }}</td>
+                    <td>{{ mov.cantidad_acumulada }}</td>
+                    <td><strong class="delta-quantity">{{ mov.cantidad }}</strong></td>
+                    <td>{% if mov.modalidad == 'BOTELLA' %}<span class="status convert">Botella</span>{% else %}<span class="status vessel">Vaso</span>{% endif %}</td>
+                    <td>
+                        <div class="movement-result">
+                            {% if mov.imagen_catalogo_url %}<img class="movement-thumb" src="{{ mov.imagen_catalogo_url }}" alt="Presentación {{ mov.codigo_final }}">{% else %}<span class="movement-thumb empty-thumb">+</span>{% endif %}
+                            <strong class="code">{{ mov.codigo_final }}</strong>
+                        </div>
+                    </td>
+                    <td>{% if mov.convertido %}<span class="status convert">Convertido</span>{% else %}<span class="muted">Sin cambio</span>{% endif %}</td>
+                </tr>
+            {% empty %}<tr><td colspan="8" class="empty">Valide una boleta para ver la resta del acumulado.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+</div>
+<aside class="panel final-panel visual-report">
+    <div class="panel-header stack"><div><p class="eyebrow">RESULTADO FINAL</p><h2>Digitar en Up Base</h2></div></div>
+    {% if consolidado %}
+    <table class="final-table" id="tabla-upbase">
+        <thead><tr><th>Código / presentación</th><th>Cantidad</th></tr></thead>
+        <tbody>
+        {% for fila in consolidado %}
+            <tr class="report-main-row">
+                <td><div class="report-code-media">{% if fila.imagen_catalogo_url %}<img class="report-thumb" src="{{ fila.imagen_catalogo_url }}" alt="Imagen de {{ fila.producto }}">{% else %}<span class="report-thumb empty-thumb">+</span>{% endif %}<div><strong class="code" data-copy-code>{{ fila.codigo_final }}</strong><small class="report-mode">{{ fila.presentacion }}</small></div></div></td>
+                <td class="number" data-copy-qty>{{ fila.cantidad }}</td>
+            </tr>
+            <tr class="description"><td colspan="2">{{ fila.producto }}{% if not fila.imagen_catalogo_url %}<br><span class="missing-photo">Foto sugerida: {{ fila.codigo_sugerido_imagen }}.jpg</span>{% endif %}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="actions vertical">
+        <button class="button" type="button" data-copy-table>Copiar códigos y cantidades</button>
+        <a class="button outline" href="{% url 'exportar_xlsx' jornada.pk %}">Descargar Excel</a>
+        <a class="button outline" href="{% url 'exportar_csv' jornada.pk %}">Descargar CSV</a>
+    </div>
+    {% else %}<div class="empty">Sin datos validados para Up Base.</div>{% endif %}
+</aside>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'ventas/base.html' %}
+{% block title %}Consolidado diario · Choco Control{% endblock %}
+{% block content %}
+<div class="page-head report-page-head">
+    <div>
+        <p class="eyebrow">PASO 3 DE 3 · {{ fecha|date:'d/m/Y' }}</p>
+        <h1>Reporte final diario para Up Base</h1>
+        <p>Revise la presentación, el código final y la cantidad antes de digitar o exportar.</p>
+    </div>
+    <div class="page-actions report-primary-actions">
+        <a class="button primary prominent-action" href="{% url 'procesar_dia' %}?fecha={{ fecha|date:'Y-m-d' }}">+ Registrar otro cierre</a>
+    </div>
+</div>
+<section class="report-day-overview" aria-label="Resumen del día">
+    <article><span>Fecha procesada</span><strong>{{ fecha|date:'d/m/Y' }}</strong></article>
+    <article><span>Vías incluidas</span><strong>{{ total_metodos }}</strong></article>
+    <article><span>Boletas registradas</span><strong>{{ total_cierres }}</strong></article>
+    <article><span>Códigos para Up Base</span><strong>{{ total_codigos }}</strong></article>
+</section>
+<div class="alert info-calculation"><strong>Cómo se calcula:</strong> dentro de una misma vía, cada boleta nueva se compara con la anterior y solo entra su diferencia; los resultados de Presencial, Kio 1, Kio 2 y Ventas online sí se suman en este consolidado.</div>
+{% if advertencias %}
+<section class="alerts">
+    {% for advertencia in advertencias %}<div class="alert">{{ advertencia }}</div>{% endfor %}
+</section>
+{% endif %}
+<div class="daily-layout daily-stack">
+    <section class="panel methods-panel">
+        <div class="panel-header methods-heading">
+            <div>
+                <h2>Vías incluidas</h2>
+                <p class="panel-subtitle">Abra una vía para revisar sus movimientos y fotografías de cierre.</p>
+            </div>
+        </div>
+        <div class="table-wrap methods-table-wrap">
+            <table class="methods-table">
+                <thead><tr><th>Vía de venta</th><th>Boletas registradas</th><th class="right">Detalle</th></tr></thead>
+                <tbody>
+                {% for jornada in jornadas %}
+                    <tr>
+                        <td><strong>{{ jornada.caja.nombre }}</strong></td>
+                        <td><span class="closing-count">{{ jornada.cierres.count }}</span></td>
+                        <td class="right"><a class="button outline small detail-button" href="{% url 'jornada_detalle' jornada.pk %}">Ver movimientos →</a></td>
+                    </tr>
+                {% empty %}<tr><td colspan="3" class="empty">No hay cierres para la fecha.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if jornadas %}
+        <footer class="methods-panel-footer">
+            <div>
+                <strong>Gestión del día</strong>
+                <span>Use esta opción solo si debe volver a cargar todos los cierres de esta fecha.</span>
+            </div>
+            <a class="subtle-danger-action" href="{% url 'eliminar_registros_dia' fecha|date:'Y-m-d' %}">Eliminar registros del día</a>
+        </footer>
+        {% endif %}
+    </section>
+
+    <section class="panel daily-final visual-report report-wide-panel">
+        <div class="panel-header stack report-panel-header">
+            <div>
+                <p class="eyebrow">CONSOLIDADO DEL DÍA</p>
+                <h2>Digitar en Up Base</h2>
+                <p class="report-help">Productos consolidados según la presentación final que se registrará. Los acumulados se restan dentro de cada vía y después se suman entre vías.</p>
+            </div>
+            {% if consolidado %}
+            <div class="actions report-actions">
+                <a class="button primary copy-action" href="{% url 'ayuda_escritura_upbase' fecha|date:'Y-m-d' %}">Ayuda de escritura</a>
+                <button class="button outline copy-action" type="button" data-copy-table>Copiar tabla</button>
+                <a class="button outline" href="{% url 'exportar_dia_xlsx' fecha|date:'Y-m-d' %}">Descargar Excel</a>
+                <a class="button outline" href="{% url 'exportar_dia_csv' fecha|date:'Y-m-d' %}">Descargar CSV</a>
+            </div>
+            {% endif %}
+        </div>
+        {% if consolidado %}
+        <div class="table-wrap report-table-wrap">
+            <table class="final-table wide-final-table" id="tabla-upbase">
+                <thead>
+                    <tr>
+                        <th class="report-product-column">Producto / presentación</th>
+                        <th>Código Up Base</th>
+                        <th>Vías incluidas</th>
+                        <th class="right">Cantidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for fila in consolidado %}
+                    <tr class="report-main-row">
+                        <td>
+                            <div class="report-product-media">
+                                {% if fila.imagen_catalogo_url %}<img class="report-thumb" src="{{ fila.imagen_catalogo_url }}" alt="Imagen de {{ fila.producto }}">{% else %}<span class="report-thumb empty-thumb">+</span>{% endif %}
+                                <div class="report-product-text">
+                                    <strong>{{ fila.producto }}</strong>
+                                    <small class="report-mode">{{ fila.presentacion }}</small>
+                                    {% if not fila.imagen_catalogo_url %}<small class="missing-photo">Foto sugerida: {{ fila.codigo_sugerido_imagen }}.jpg</small>{% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td><strong class="code report-final-code" data-copy-code>{{ fila.codigo_final }}</strong></td>
+                        <td class="report-sources">{% if fila.cajas %}{{ fila.cajas }}{% else %}—{% endif %}</td>
+                        <td class="number" data-copy-qty>{{ fila.cantidad }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}<div class="empty">Aún no hay vías validadas para exportar.</div>{% endif %}
+    </section>
+</div>
+{% endblock %}

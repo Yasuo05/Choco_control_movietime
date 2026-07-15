@@ -1,0 +1,120 @@
+{% extends 'ventas/base.html' %}
+{% block title %}Productos · Choco Control{% endblock %}
+{% block content %}
+<div class="page-head product-page-head">
+    <div>
+        <p class="eyebrow">CATÁLOGO VISUAL</p>
+        <h1>Productos por presentación</h1>
+        <p>Vea la foto exacta del producto que se entrega con vaso o con botella.</p>
+    </div>
+    <a class="button primary" href="{% url 'producto_nuevo' %}">+ Nuevo producto</a>
+</div>
+
+<section class="photo-library-panel" aria-label="Instrucciones para imágenes de productos">
+    <div class="photo-library-icon" aria-hidden="true">▧</div>
+    <div class="photo-library-text">
+        <h2>Una fotografía para cada código y presentación</h2>
+        <p>Copie imágenes en <span class="folder-code">media/imagenes_productos/</span>. Use el código de vaso para la foto con vaso y el código de botella para la foto con botella.</p>
+        <div class="file-examples">
+            <span><strong>2611.jpg</strong> Combo 1 dulce · vaso</span>
+            <span><strong>2768.jpg</strong> Combo 1 dulce · botella</span>
+            <span><strong>2097.jpg</strong> Gaseosa botella</span>
+        </div>
+    </div>
+    <div class="photo-library-stat">
+        <strong>{{ total_con_foto }}</strong>
+        <span>con foto</span>
+        <small>de {{ total_visibles }} visibles</small>
+    </div>
+</section>
+
+<nav class="catalog-tabs" aria-label="Presentación del catálogo">
+    <a class="catalog-tab {% if vista == 'vaso' %}active{% endif %}" href="?vista=vaso{% if q %}&amp;q={{ q|urlencode }}{% endif %}">Presentación vaso</a>
+    <a class="catalog-tab bottle {% if vista == 'botella' %}active{% endif %}" href="?vista=botella{% if q %}&amp;q={{ q|urlencode }}{% endif %}">Presentación botella</a>
+    <a class="catalog-tab {% if vista == 'general' %}active{% endif %}" href="?vista=general{% if q %}&amp;q={{ q|urlencode }}{% endif %}">Vista general</a>
+</nav>
+
+<section class="catalog-toolbar">
+    <form class="search product-search" method="get">
+        <input type="hidden" name="vista" value="{{ vista }}">
+        <input name="q" value="{{ q }}" placeholder="Buscar por producto o código" aria-label="Buscar producto por nombre o código">
+        <button class="button" type="submit">Buscar</button>
+        {% if q %}<a class="button outline" href="{% url 'productos_lista' %}?vista={{ vista }}">Limpiar</a>{% endif %}
+    </form>
+</section>
+
+<div class="product-grid">
+    {% if vista == 'general' %}
+        {% for producto in tarjetas %}
+        <article class="product-card">
+            <div class="product-photo-frame">
+                {% if producto.imagen_catalogo_url %}
+                <img class="product-photo" src="{{ producto.imagen_catalogo_url }}" alt="Imagen de {{ producto.nombre }}">
+                <span class="photo-linked">Foto · {{ producto.imagen_catalogo_archivo }}</span>
+                {% else %}
+                <div class="product-photo-empty">
+                    <span class="empty-image-mark" aria-hidden="true">＋</span>
+                    <strong>Sin fotografía</strong>
+                    <small>Agregue <span class="code">{{ producto.codigo_sugerido_imagen }}.jpg</span></small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="product-card-body">
+                <div class="product-category">{{ producto.categoria|default:'Producto' }}</div>
+                <h2>{{ producto.nombre }}</h2>
+                <div class="product-codes">
+                    <div><span>Venta / vaso</span><strong class="code">{{ producto.codigo_vaso|default:'—' }}</strong></div>
+                    <div><span>Botella</span><strong class="code">{{ producto.codigo_botella|default:'—' }}</strong></div>
+                </div>
+                <div class="product-tags">
+                    {% if producto.convertible %}<span class="status convert">Vaso → botella</span>{% else %}<span class="status">Venta directa</span>{% endif %}
+                    {% if producto.confirmado %}<span class="status ok">Listo</span>{% else %}<span class="status pending">Verificar</span>{% endif %}
+                </div>
+                <div class="product-card-actions">
+                    <a class="product-edit" href="{% url 'producto_editar' producto.pk %}">Editar producto</a>
+                    <a class="product-delete" href="{% url 'producto_eliminar' producto.pk %}">Eliminar</a>
+                </div>
+            </div>
+        </article>
+        {% empty %}<section class="panel empty catalog-empty">No se encontraron productos para la búsqueda realizada.</section>{% endfor %}
+    {% else %}
+        {% for tarjeta in tarjetas %}
+        <article class="product-card presentation-card {% if tarjeta.presentacion == 'BOTELLA' %}bottle-card{% endif %}">
+            <div class="product-photo-frame">
+                {% if tarjeta.imagen_catalogo_url %}
+                <img class="product-photo" src="{{ tarjeta.imagen_catalogo_url }}" alt="Imagen de {{ tarjeta.nombre }}">
+                <span class="photo-linked">Foto · {{ tarjeta.imagen_catalogo_archivo }}</span>
+                {% else %}
+                <div class="product-photo-empty">
+                    <span class="empty-image-mark" aria-hidden="true">＋</span>
+                    <strong>Sin fotografía</strong>
+                    <small>Agregue <span class="code">{{ tarjeta.codigo_sugerido_imagen }}.jpg</span></small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="product-card-body">
+                <div class="product-category">{{ tarjeta.categoria|default:'Producto' }}</div>
+                <h2>{{ tarjeta.nombre }}</h2>
+                <p class="presentation-description">{{ tarjeta.descripcion }}</p>
+                <div class="presentation-code {% if tarjeta.presentacion == 'BOTELLA' %}bottle-code{% endif %}">
+                    <span>Código a digitar</span>
+                    <strong class="code">{{ tarjeta.codigo }}</strong>
+                </div>
+                {% if tarjeta.relacion_codigo %}
+                <div class="presentation-relation"><span>{{ tarjeta.relacion_etiqueta }}</span><strong class="code">{{ tarjeta.relacion_codigo }}</strong></div>
+                {% endif %}
+                <div class="product-tags">
+                    {% if tarjeta.presentacion == 'BOTELLA' %}<span class="status convert">Botella</span>{% elif tarjeta.presentacion == 'VASO' %}<span class="status vessel">Vaso</span>{% else %}<span class="status">Venta directa</span>{% endif %}
+                    {% if tarjeta.confirmado %}<span class="status ok">Listo</span>{% else %}<span class="status pending">Verificar</span>{% endif %}
+                </div>
+                <div class="product-card-actions">
+                    <a class="product-edit" href="{% url 'producto_editar' tarjeta.pk %}">Editar producto</a>
+                    <a class="product-delete" href="{% url 'producto_eliminar' tarjeta.pk %}">Eliminar</a>
+                </div>
+            </div>
+        </article>
+        {% empty %}<section class="panel empty catalog-empty">No se encontraron productos para esta presentación.</section>{% endfor %}
+    {% endif %}
+</div>
+<p class="note catalog-note">Las fotos no cambian el cálculo: únicamente ayudan a identificar la presentación. En el reporte final, el sistema utiliza la imagen del código realmente enviado a Up Base.</p>
+{% endblock %}

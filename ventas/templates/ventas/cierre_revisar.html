@@ -1,0 +1,61 @@
+{% extends 'ventas/base.html' %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <p class="eyebrow">{{ cierre.jornada.caja.nombre }} · CIERRE {{ cierre.numero }}</p>
+        <h1>Validar cantidades acumuladas</h1>
+    </div>
+    <a class="button outline" href="{% url 'jornada_detalle' cierre.jornada.pk %}">Volver</a>
+</div>
+<div class="two-col review">
+<section class="panel form-panel">
+    {% if cierre.ocr_estado %}<div class="notice">{{ cierre.ocr_estado }}</div>{% endif %}
+    {% if codigos_no_registrados %}
+    <div class="alert danger-alert small-alert">{{ codigos_no_registrados }} código(s) no están en el catálogo. Revise esas filas antes de confirmar el cierre.</div>
+    {% endif %}
+    {% if detecciones %}
+    <details class="ocr-detected" open>
+        <summary>Resultado leído de la boleta</summary>
+        <div class="table-wrap compact-table">
+            <table>
+                <thead><tr><th>Código</th><th>Descripción detectada</th><th>Catálogo</th><th class="numeric">Cant.</th><th>Revisión</th></tr></thead>
+                <tbody>
+                {% for fila in detecciones %}
+                    <tr class="{% if fila.alerta %}needs-review{% endif %}">
+                        <td class="code">{{ fila.codigo }}</td>
+                        <td>{{ fila.descripcion }}</td>
+                        <td>{% if fila.producto_catalogo %}<span class="ok-label">{{ fila.producto_catalogo }}</span>{% else %}<span class="review-label">No registrado</span>{% endif %}</td>
+                        <td class="numeric">{% if fila.cantidad != None %}{{ fila.cantidad }}{% else %}—{% endif %}</td>
+                        <td>{% if fila.alerta %}{{ fila.alerta }}{% else %}<span class="ok-label">Detectado</span>{% endif %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+    {% endif %}
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="field {% if form.detalles_texto.errors %}has-error{% endif %}">
+            <label for="{{ form.detalles_texto.id_for_label }}">{{ form.detalles_texto.label }}</label>
+            {{ form.detalles_texto }}
+            <p class="help">{{ form.detalles_texto.help_text }} Ejemplo: <span class="code">3088,10</span>. Si aparece <span class="code">REVISAR</span>, reemplácelo por la cantidad de la boleta. Si el código aparece como no registrado, confirme si falta crearlo en Productos.</p>
+            {% for error in form.detalles_texto.errors %}<p class="error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="actions"><button class="button primary" type="submit">Confirmar cierre y recalcular</button></div>
+    </form>
+</section>
+<aside class="panel scan-panel">
+    <h3>Imagen y lectura OCR</h3>
+    {% if cierre.imagen %}
+        <a href="{{ cierre.imagen.url }}" target="_blank"><img class="receipt" src="{{ cierre.imagen.url }}" alt="Boleta cargada"></a>
+    {% else %}
+        <p class="muted">No se cargó imagen para este cierre. Puede ingresar los datos manualmente.</p>
+    {% endif %}
+    {% if cierre.ocr_texto %}
+        <details><summary>Ver texto detectado</summary><pre>{{ cierre.ocr_texto }}</pre></details>
+    {% endif %}
+    <p class="note">La lectura automática es de apoyo. Confirme las cantidades acumuladas contra la boleta antes de continuar.</p>
+</aside>
+</div>
+{% endblock %}

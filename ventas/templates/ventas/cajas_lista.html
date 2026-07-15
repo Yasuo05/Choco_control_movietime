@@ -1,0 +1,19 @@
+{% extends 'ventas/base.html' %}
+{% block content %}
+<div class="page-head">
+    <div><p class="eyebrow">CONFIGURACIÓN</p><h1>Vías de venta</h1></div>
+    <a class="button primary" href="{% url 'caja_nueva' %}">+ Registrar vía</a>
+</div>
+<section class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th></tr></thead>
+            <tbody>
+                {% for caja in cajas %}
+                <tr><td>{{ caja.nombre }}</td><td>{{ caja.get_tipo_display }}</td><td>{% if caja.activa %}<span class="status ok">Activa</span>{% else %}<span class="status">Inactiva</span>{% endif %}</td></tr>
+                {% empty %}<tr><td colspan="3" class="empty">No hay vías registradas.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
